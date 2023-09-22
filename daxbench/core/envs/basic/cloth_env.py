@@ -23,7 +23,6 @@ class ClothEnv:
     RGB = "RGB"
 
     def __init__(self, conf, batch_size, max_steps, aux_reward=False):
-
         assert conf
         cloth_mask = self.create_cloth_mask(conf)
         collision_func = self.get_collision_func()
@@ -45,14 +44,22 @@ class ClothEnv:
         num_p = int(self.cloth_mask.astype(jnp.int32).sum())
         self.observation_size = num_p * 6 + 8
         self.cloth_state_shape = (num_p, 6)
-        self.observation_space = Box(
-            low=-1.0, high=1.0, shape=(num_p * 6 + 8,), dtype=np.float32
-        )
-        self.action_space = Box(low=-1.0, high=1.0, shape=(8,), dtype=np.float32)
+        self.observation_space = Box(low=-1.0, high=1.0, shape=(num_p * 6 + 8,), dtype=np.float32)
+        self.action_space = Box(low=-1.0, high=1.0, shape=(6,), dtype=np.float32)
         self.spec = None
 
         self.idx_i, self.idx_j = jnp.nonzero(self.cloth_mask)
-        self.renderer = MeshPyRenderer()
+
+        # カメラ・レンダリング解像度の指定
+        cam_pose = None
+        if hasattr(conf, "cam_pose"):
+            cam_pose = conf.cam_pose
+
+        if hasattr(conf, "screen_size"):
+            self.renderer = MeshPyRenderer(cam_pose=cam_pose, screen_size=conf.screen_size)
+        else:
+            self.renderer = MeshPyRenderer(cam_pose=cam_pose)
+
         self.step_diff = self.build_step_diff()
         self.step_diff = jax.jit(self.step_diff)
         self.reset = self.build_reset()

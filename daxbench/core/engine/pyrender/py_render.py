@@ -8,8 +8,10 @@ import pyglet
 import pyrender
 import trimesh
 
-os.environ['PYOPENGL_PLATFORM'] = 'egl'
-pyglet.options['shadow_window'] = False
+from typing import Tuple
+
+os.environ["PYOPENGL_PLATFORM"] = "egl"
+pyglet.options["shadow_window"] = False
 my_path = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -19,7 +21,7 @@ class BasicPyRenderer:
         scene = pyrender.Scene(ambient_light=np.array([0.05, 0.05, 0.05, 1.0]))
 
         # Wood trimesh
-        wood_trimesh = trimesh.load(f'{my_path}/models/wood.obj')
+        wood_trimesh = trimesh.load(f"{my_path}/models/wood.obj")
         wood_mesh = pyrender.Mesh.from_trimesh(wood_trimesh)
         ground_size = np.array([1.0, 1.0, 0])
         self.wood_node = scene.add(wood_mesh)
@@ -29,15 +31,17 @@ class BasicPyRenderer:
 
         # Light creation
         direc_l = pyrender.DirectionalLight(color=np.ones(3), intensity=1.0)
-        spot_l = pyrender.SpotLight(color=np.ones(3), intensity=10.0,
-                                    innerConeAngle=np.pi / 16, outerConeAngle=np.pi / 6)
+        spot_l = pyrender.SpotLight(
+            color=np.ones(3), intensity=10.0, innerConeAngle=np.pi / 16, outerConeAngle=np.pi / 6
+        )
         point_l = pyrender.PointLight(color=np.ones(3), intensity=10.0)
 
         # Camera creation
         cam = pyrender.PerspectiveCamera(yfov=(np.pi / 3.0))
 
         light_pose = self.look_at(np.array([0.9, 0.5, 1.0]), np.array([0.6, 0.5, 0]))
-        if cam_pose is None: cam_pose = light_pose
+        if cam_pose is None:
+            cam_pose = light_pose
 
         self.direc_l_node = scene.add(direc_l, pose=light_pose)
         self.spot_l_node = scene.add(spot_l, pose=light_pose)
@@ -55,13 +59,19 @@ class BasicPyRenderer:
         vector2 = vector2 / np.linalg.norm(vector2)
 
         vector3 = np.cross(vector, vector2)
-        view_mat = np.array([
-            [vector2[0], vector3[0], vector[0], 0.0],
-            [vector2[1], vector3[1], vector[1], 0.0],
-            [vector2[2], vector3[2], vector[2], 0.0],
-            [-np.dot(vector2, camera_position), -np.dot(vector3, camera_position), -np.dot(vector, camera_position),
-             1.0]
-        ])
+        view_mat = np.array(
+            [
+                [vector2[0], vector3[0], vector[0], 0.0],
+                [vector2[1], vector3[1], vector[1], 0.0],
+                [vector2[2], vector3[2], vector[2], 0.0],
+                [
+                    -np.dot(vector2, camera_position),
+                    -np.dot(vector3, camera_position),
+                    -np.dot(vector, camera_position),
+                    1.0,
+                ],
+            ]
+        )
 
         # pose_mat = np.eye(4)
         # pose_mat[:3, 3] = camera_position
@@ -71,15 +81,14 @@ class BasicPyRenderer:
 
 
 class MeshPyRenderer(BasicPyRenderer):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, cam_pose=None, screen_size: Tuple[int, int] = (640, 480)):
+        super().__init__(cam_pose, screen_size)
         self.obj_node = None
         self.obj_node_ = None
         self.gripper0 = None
         self.gripper1 = None
 
     def render(self, x_grid, indices, ps0, visualize=True):
-
         x_grid = x_grid[..., [0, 2, 1]]
         indices_ = indices[:, [0, 2, 1]]
         vertices = x_grid.reshape((-1, 3))
@@ -111,8 +120,8 @@ class MeshPyRenderer(BasicPyRenderer):
         depth = depth[:, ::-1]
 
         if visualize:
-            cv2.imshow('color', color)
-            cv2.imshow('depth', depth)
+            cv2.imshow("color", color)
+            cv2.imshow("depth", depth)
             cv2.waitKey(10)
         return color, depth
 
@@ -139,7 +148,7 @@ class ParticlePyRenderer(BasicPyRenderer):
 
         color, depth = self.renderer.render(self.scene)
         if visualize:
-            cv2.imshow('color', color[:, :, ::-1])
+            cv2.imshow("color", color[:, :, ::-1])
             # cv2.imshow('depth', depth)
             cv2.waitKey(10)
         return color, depth
@@ -168,13 +177,13 @@ class WaterPyRenderer(BasicPyRenderer):
 
         color, depth = self.renderer.render(self.scene)
         if visualize:
-            cv2.imshow('color', color[:, :, ::-1])
-            cv2.imshow('depth', depth)
+            cv2.imshow("color", color[:, :, ::-1])
+            cv2.imshow("depth", depth)
             cv2.waitKey(10)
         return color, depth
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # render = BasicPyRenderer()
     # img, _ = render.renderer.render(render.scene)
     # cv2.imshow('img', img[:, :, ::-1])
