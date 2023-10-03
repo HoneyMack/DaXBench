@@ -230,7 +230,12 @@ class ClothEnv:
             reward = math.e ** (-chamfer_distance * 10)
             if self.aux_reward:
                 reward += math.e ** (-contact_distance)
-            real_reward = old_chamfer_distance - chamfer_distance + 0.1 * contact_distance
+            #real_reward = old_chamfer_distance - chamfer_distance + 0.1 * contact_distance #run12
+            # real_reward = old_chamfer_distance - chamfer_distance - 1 * contact_distance # run13
+            # real_reward = old_chamfer_distance - chamfer_distance - 1 * contact_distance # run19
+            # real_reward = old_chamfer_distance - chamfer_distance - 0.1 * contact_distance # run20
+            # real_reward =- chamfer_distance - 0.1 * contact_distance # run23
+            real_reward =10*(-chamfer_distance - 0.1 * contact_distance) # run24
             info['real_reward'] = real_reward
             reward *= 0.99 ** state.cur_step
             return obs, reward, done, info
